@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+  <!-- <h1><%= title %></h1> -->
+  <!-- <p>EJS Welcome to <%= title %></p> -->
+  <div class="inputEmailDiv">
+    <div>
+      请输入邮箱:
+      <input type="text" value="408181273@qq.com" name="email" />
+    </div>
+    <div>
+      输入域名:
+      <input type="text" value="*.baidu.com" name="domain" placeholder="*.baidu.com" />
+    </div>
+    <button id="getTxtRecordID">确认</button>
+
+    <div>
+      <h1>欢迎使用证书自动申请工具</h1>
+      <p>请在上方输入邮箱和域名</p>
+      <p>注意：域名需要添加CNAME解析到指定的服务器</p>
+      <p>注意：如果是泛域名，请在上方输入*.baidu.com</p>
+    </div>
+  </div>
+  
+   
+  <!-- 服务器返回的数据 -->
+  <div class="showInfo">
+       <div class="serveBackInfo"></div>
+       <button id="getCertID">获取证书</button>
+  </div>
+  
+  <!-- 
+      Using CA: https://acme.zerossl.com/v2/DV90
+      Creating domain key
+      The domain key is here: /root/.acme.sh/*.wanzishu.com_ecc/*.wanzishu.com.key
+      Single domain='*.wanzishu.com'
+      Getting webroot for domain='*.wanzishu.com'
+      Add the following TXT record:
+      Domain: '_acme-challenge.wanzishu.com'
+      TXT value: 'PDIRBTpCf0cGk2dLnPSG1h7655GjmBcpXA8AVFdoNHY'
+      Please make sure to prepend '_acme-challenge.' to your domain
+      so that the resulting subdomain is: _acme-challenge.wanzishu.com
+      Please add the TXT records to the domains, and re-run with --renew.
+      Please add '--debug' or '--log' to see more information.
+      See: https://github.com/acmesh-official/acme.sh/wiki/How-to-debug-acme.sh 
+  -->
+
+
+  <!-- 请求CNAME -->
+  <!-- acme.sh --renew -d *.hnzzwa.com --yes-I-know-dns-manual-mode-enough-go-ahead-please -k 2048 -->
+
+  <!-- acme.sh --renew -d *.wanzishu.online  --yes-I-know-dns-manual-mode-enough-go-ahead-please -->
+  <script>
+    // This is a simple JavaScript function to show an alert when the button is clicked
+    $(document).ready(function () {
+      //请求Text记录
+      $('#getTxtRecordID').click(function (event) {
+        var email = $('input[name="email"]').val();
+        var domain = $('input[name="domain"]').val();
+        if (email === '') {
+          alert('请输入邮箱地址');
+          return;
+        }
+        if (domain === '') {
+          alert('请输入域名');
+          return;
+        }
+
+        $.ajax({
+          url: '/getTxtRecord',
+          type: 'GET',
+          data: {
+            email: email,
+            domain: domain
+          },
+          success: function (data) {
+            $('.inputEmailDiv').hide(); // Hide the input field
+            // Handle the response from the server
+            console.log(data);
+            $('.showInfo').show(); // Show the CNAME info div
+            $('.serveBackInfo').html(data.data); // Update the CNAME info div with the response
+          },
+          error: function (xhr, status, error) {
+            // Handle any errors
+            console.error('Error:', error);
+          }
+        });
+      });
+
+      // 获取证书
+      $('#getCertID').click(function (event) {
+        var email = $('input[name="email"]').val();
+        var domain = $('input[name="domain"]').val();
+        $.ajax({
+          url: '/validate',
+          type: 'GET',
+          data: {
+            email: email,
+            domain: domain
+          },
+          success: function (data) {
+            // Handle the response from the server
+            console.log(data);
+            alert('证书获取成功');
+          },
+          error: function (xhr, status, error) {
+            // Handle any errors
+            console.error('Error:', error);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

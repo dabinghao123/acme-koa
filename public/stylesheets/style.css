@@ -1,0 +1,23 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.showInfo{
+  /* display: none; */
+  font-size: 16px;
+  color: #666;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+.serveBackInfo {
+  /* display: none; */
+  font-size: 16px;
+  color: #666;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
