@@ -4,11 +4,18 @@ body {
 }
 
 a {
-  color: #00B7FF;
+  color: #00b7ff;
 }
 
-.showInfo{
+.showInfo {
   /* display: none; */
+  font-size: 16px;
+  color: #666;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+.certInfo {
+  white-space: pre;
   font-size: 16px;
   color: #666;
   border: 1px solid #ccc;
@@ -16,6 +23,7 @@ a {
 }
 .serveBackInfo {
   /* display: none; */
+  white-space: pre;
   font-size: 16px;
   color: #666;
   border: 1px solid #ccc;
