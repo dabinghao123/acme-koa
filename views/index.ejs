@@ -3,7 +3,9 @@
   <head>
     <title><%= title %></title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/js/FileSaver.min.js"></script>
+    <script src="/js/jszip.min.js"></script>
   </head>
 
   <body>
@@ -39,9 +41,9 @@
       <div class="serveBackInfo"></div>
       <div class="certInfo"></div>
       <button id="getCertID">获取证书</button>
-      <button id="downlaod">复制证书</button>
-      <button id="downlaod">复制秘钥</button>
-      <button id="downlaodCert">下载证书</button>
+      <button style="margin-left: 10px;" id="copyCertData">复制证书</button>
+      <button style="margin-left: 10px;" id="copyCertKeyData">复制秘钥</button>
+      <button style="margin-left: 10px;" id="downlaodCert">下载证书</button>
     </div>
 
     <!-- 
@@ -102,7 +104,8 @@
             },
           });
         });
-
+         
+        let outputData = null
         // 获取证书
         $("#getCertID").click(function (event) {
           var email = $('input[name="email"]').val();
@@ -117,6 +120,7 @@
             success: function (data) {
               // Handle the response from the server
               console.log(data);
+              outputData = data.data
               $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
             },
             error: function (xhr, status, error) {
@@ -125,6 +129,54 @@
             },
           });
         });
+
+        // 复制证书
+        $("#copyCertData").click(function (event) {
+          if (outputData) {
+            var certData = outputData.cert;
+            navigator.clipboard.writeText(certData).then(function () {
+              alert("证书复制成功");
+            }, function (err) {
+              console.error("证书复制失败", err);
+            });
+          } else {
+            alert("请先获取证书");
+          }
+        });
+
+        // 复制秘钥
+        $("#copyCertKeyData").click(function (event) {
+          if (outputData) {
+            var certKeyData = outputData.key;
+            navigator.clipboard.writeText(certKeyData).then(function () {
+              alert("秘钥复制成功");
+            }, function (err) {
+              console.error("秘钥复制失败", err);
+            });
+          } else {
+            alert("请先获取证书");
+          }
+        });
+        // 下载证书
+        $("#downlaodCert").click(function (event) {
+          if (outputData) {
+            var certData = outputData.cert;
+            var certKeyData = outputData.key;
+            var domain = $('input[name="domain"]').val();
+             domain = domain.replace("*", "wildcard");
+            const zip = new JSZip();
+            zip.file(`${domain}.pem`, certData);
+            zip.file(`${domain}.key`, certKeyData);
+            zip
+              .generateAsync({ type: "blob" })
+              .then(function (content) {
+                window.saveAs(content, domain + ".zip");
+              });
+          } else {
+            alert("请先获取证书");
+          }
+        });
+        // ============================
       });
     </script>
   </body>

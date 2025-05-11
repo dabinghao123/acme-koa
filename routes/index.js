@@ -1,7 +1,8 @@
 const router = require("koa-router")();
-// const fs = require('fs')
 const child_process = require("child_process");
 const util = require("util");
+const fs =  require('fs')
+const path =  require('path')
 
 const execAsync = util.promisify(child_process.exec);
 // Configuration
@@ -55,8 +56,8 @@ router.get("/getTxtRecord", async (ctx, next) => {
         code: 200,
         msg: "success",
         data: {
-          stderr: stdout,
-          stdout: stderr,
+          stderr: stdout.stderr || stderr,
+          stdout: stdout.stdout || stdout
         },
       };
     } else {
@@ -95,12 +96,20 @@ router.get("/validate", async (ctx, next) => {
     );
     console.log(success, stdout, stderr);
     if (success) {
+      // 读取证书文件
+      const certPath = path.join(config.certDir, `${domain}_ecc`, "fullchain.cer");
+      const keyPath = path.join(config.certDir, `${domain}_ecc`, );
+      const cert = fs.readFileSync(certPath, "utf8");
+      const key = fs.readFileSync(keyPath, "utf8");
+
       ctx.body = {
         code: 200,
         msg: "success",
         data: {
-          stderr: stdout.stderr,
-          stdout: stdout.stdout,
+          stderr: stdout.stderr || stderr,
+          stdout: stdout.stdout || stdout,
+          cert: cert,
+          key: key
         },
       };
     } else {
