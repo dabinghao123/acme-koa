@@ -11,39 +11,65 @@
   <body>
     <!-- <h1><%= title %></h1> -->
     <!-- <p>EJS Welcome to <%= title %></p> -->
-    <div class="inputEmailDiv">
-      <div>
-        请输入邮箱:
-        <input type="text" value="408181273@qq.com" name="email" />
-      </div>
-      <div>
-        输入域名:
-        <input
-          type="text"
-          value="*.baidu.com"
-          name="domain"
-          placeholder="*.baidu.com"
-        />
-      </div>
-      <button id="getTxtRecordID">确认</button>
+    <div class="certDiv">
+      <div class="title-new">生成证书</div>
+      <div class="inputEmailDiv">
+        <!-- <div>
+          请输入邮箱:
+          <input type="text" value="408181273@qq.com" name="email" />
+        </div> -->
+        <div style="display: flex; align-items: center">
+          <span>输入域名:</span>
+          <input
+            class="inputDev"
+            type="text"
+            value="*.baidu.com"
+            name="domain"
+            placeholder="*.baidu.com"
+          />
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+          "
+        >
+          <button id="getTxtRecordID">第一步:输入域名点击这里请求解析</button>
+        </div>
 
-      <div>
-        <h1>欢迎使用证书自动申请工具</h1>
-        <p>请在上方输入邮箱和域名</p>
-        <p>注意：域名需要添加CNAME解析到指定的服务器</p>
-        <p>注意：如果是泛域名，请在上方输入*.baidu.com</p>
+        <div>
+          <p>请在上方输入域名</p>
+          <p>注意：域名需要添加Text解析到指定的服务器</p>
+          <p>注意：如果是泛域名，请在上方输入*.baidu.com</p>
+        </div>
       </div>
-    </div>
+      <!-- 服务器返回的数据 -->
 
-    <!-- 服务器返回的数据 -->
-    <div class="showInfo">
-      <!-- 请求Text记录 -->
-      <div class="serveBackInfo"></div>
-      <div class="certInfo"></div>
-      <button id="getCertID">获取证书</button>
-      <button style="margin-left: 10px;" id="copyCertData">复制证书</button>
-      <button style="margin-left: 10px;" id="copyCertKeyData">复制秘钥</button>
-      <button style="margin-left: 10px;" id="downlaodCert">下载证书</button>
+      <div class="showInfo">
+        <!-- 请求Text记录 -->
+        <div class="serveBackInfo"></div>
+        <div class="certInfo"></div>
+        <div class="buttonsDiv">
+          <button id="getCertID" class="normalBtn">获取证书</button>
+          <button style="margin-left: 10px" class="normalBtn" id="copyCertData">
+            复制证书内容
+          </button>
+          <button
+            style="margin-left: 10px"
+            class="normalBtn"
+            id="copyCertKeyData"
+          >
+            复制私钥内容
+          </button>
+          <button style="margin-left: 10px" class="normalBtn" id="downlaodCert">
+            下载证书
+          </button>
+        </div>
+      </div>
+
+      <div class="loadingDiv">..处理中</div>
     </div>
 
     <!-- 
@@ -71,12 +97,12 @@
       $(document).ready(function () {
         //请求Text记录
         $("#getTxtRecordID").click(function (event) {
-          var email = $('input[name="email"]').val();
+          // var email = $('input[name="email"]').val();
           var domain = $('input[name="domain"]').val();
-          if (email === "") {
-            alert("请输入邮箱地址");
-            return;
-          }
+          // if (email === "") {
+          //   alert("请输入邮箱地址");
+          //   return;
+          // }
           if (domain === "") {
             alert("请输入域名");
             return;
@@ -86,7 +112,7 @@
             url: "/getTxtRecord",
             type: "GET",
             data: {
-              email: email,
+              // email: email,
               domain: domain,
             },
             success: function (data) {
@@ -104,23 +130,23 @@
             },
           });
         });
-         
-        let outputData = null
+
+        let outputData = null;
         // 获取证书
         $("#getCertID").click(function (event) {
-          var email = $('input[name="email"]').val();
+          // var email = $('input[name="email"]').val();
           var domain = $('input[name="domain"]').val();
           $.ajax({
             url: "/validate",
             type: "GET",
             data: {
-              email: email,
+              // email: email,
               domain: domain,
             },
             success: function (data) {
               // Handle the response from the server
               console.log(data);
-              outputData = data.data
+              outputData = data.data;
               $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
             },
             error: function (xhr, status, error) {
@@ -134,11 +160,14 @@
         $("#copyCertData").click(function (event) {
           if (outputData) {
             var certData = outputData.cert;
-            navigator.clipboard.writeText(certData).then(function () {
-              alert("证书复制成功");
-            }, function (err) {
-              console.error("证书复制失败", err);
-            });
+            navigator.clipboard.writeText(certData).then(
+              function () {
+                alert("证书复制成功");
+              },
+              function (err) {
+                console.error("证书复制失败", err);
+              }
+            );
           } else {
             alert("请先获取证书");
           }
@@ -148,11 +177,14 @@
         $("#copyCertKeyData").click(function (event) {
           if (outputData) {
             var certKeyData = outputData.key;
-            navigator.clipboard.writeText(certKeyData).then(function () {
-              alert("秘钥复制成功");
-            }, function (err) {
-              console.error("秘钥复制失败", err);
-            });
+            navigator.clipboard.writeText(certKeyData).then(
+              function () {
+                alert("秘钥复制成功");
+              },
+              function (err) {
+                console.error("秘钥复制失败", err);
+              }
+            );
           } else {
             alert("请先获取证书");
           }
@@ -163,15 +195,13 @@
             var certData = outputData.cert;
             var certKeyData = outputData.key;
             var domain = $('input[name="domain"]').val();
-             domain = domain.replace("*", "wildcard");
+            domain = domain.replace("*", "wildcard");
             const zip = new JSZip();
             zip.file(`${domain}.pem`, certData);
             zip.file(`${domain}.key`, certKeyData);
-            zip
-              .generateAsync({ type: "blob" })
-              .then(function (content) {
-                window.saveAs(content, domain + ".zip");
-              });
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+              window.saveAs(content, domain + ".zip");
+            });
           } else {
             alert("请先获取证书");
           }
