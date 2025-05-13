@@ -92,10 +92,10 @@ router.get("/validate", async (ctx, next) => {
     //判断是否存在证书了
     const certPath = path.join(
       config.certDir,
-      `${domain}_ecc`,
+      `${domain}`,
       "fullchain.cer"
     );
-    const keyPath = path.join(config.certDir, `${domain}_ecc`, `${domain}.key`);
+    const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
     let cert = "";
     let key = "";
     try {
@@ -135,7 +135,7 @@ router.get("/validate", async (ctx, next) => {
         // 读取证书文件
         console.log("证书内容cert1===", cert, "证书内容cert1===");
       } catch (error) {
-        console.log("证书内容cert1= 没有拿到证书==");
+        console.log("证书内容cert1= 没有拿到证书==",error);
       }
       ctx.body = {
         code: 200,
