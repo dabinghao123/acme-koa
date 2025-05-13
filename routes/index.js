@@ -48,7 +48,7 @@ router.get("/getTxtRecord", async (ctx, next) => {
     //acme.sh --renew -d *.wanzishu.online  --yes-I-know-dns-manual-mode-enough-go-ahead-please
     // 你可以使用 DNS 模块来查询 TXT 记录
     const { success, stdout, stderr } = await runAcmeCommand(
-      `--issue --dns -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please`
+      `--issue --dns -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please  -k 2048`
     );
     console.log(success, stdout, stderr);
     if (success) {
@@ -97,8 +97,8 @@ router.get("/validate", async (ctx, next) => {
     console.log(success, stdout, stderr);
     if (success) {
       // 读取证书文件
-      const certPath = path.join(config.certDir, `${domain}_ecc`, "fullchain.cer");
-      const keyPath = path.join(config.certDir, `${domain}_ecc`, );
+      const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
+      const keyPath = path.join(config.certDir, `${domain}`, );
       const cert = fs.readFileSync(certPath, "utf8");
       const key = fs.readFileSync(keyPath, "utf8");
 
