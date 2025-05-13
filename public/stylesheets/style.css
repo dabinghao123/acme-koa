@@ -75,7 +75,11 @@ a {
   transition: all 0.24s ease;
 }
 .buttonsDiv {
+  display: none;
   margin-top: 10px;
+}
+#certBtns {
+  display: none;
 }
 .normalBtn {
   color: #fff;
@@ -103,14 +107,14 @@ a {
   transition: all 0.24s ease;
 }
 .showInfo {
-  /* display: none; */
+  display: none;
   font-size: 16px;
   color: #666;
   /* padding: 10px; */
   margin: 10px;
 }
 .certInfo {
-  /* display: none; */
+  display: none;
   margin-top: 10px;
   white-space: pre;
   font-size: 16px;
@@ -120,11 +124,23 @@ a {
 }
 .serveBackInfo {
   /* display: none; */
-  white-space: pre;
+  /* white-space: pre; */
   font-size: 16px;
   color: #666;
   border: 1px solid #ccc;
   padding: 10px;
+}
+
+.certInfoFatherDiv {
+  /* display: none; */
+}
+
+.cnameText {
+  background-color: #003494;
+  overflow-x: auto;
+  color: #fff;
+  padding: 6px;
+  border-radius: 5px;
 }
 
 .loadingDiv {
@@ -133,9 +149,58 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
+  color: white;
+  display: none;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.toastDiv {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  display: none;
+  padding: 10px;
+  background: black;
+  border-radius: 5px;
+}
+
+.laodingContentxt {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  background: rgba(0, 0, 0, 0.7);
+  height: 100%;
+}
+
+.load_6 {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.load_6:after {
+  content: " ";
+  display: block;
+  border-radius: 50%;
+  width: 0;
+  height: 0;
+  margin: 6px;
+  box-sizing: border-box;
+  border: 26px solid #61e8ea;
+  border-color: #61e8ea transparent #61e8ea transparent;
+  animation: load_6 1.2s infinite;
+}
+@keyframes load_6 {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+  50% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
 }

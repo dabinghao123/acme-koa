@@ -49,27 +49,59 @@
 
       <div class="showInfo">
         <!-- 请求Text记录 -->
-        <div class="serveBackInfo"></div>
-        <div class="certInfo"></div>
-        <div class="buttonsDiv">
-          <button id="getCertID" class="normalBtn">获取证书</button>
-          <button style="margin-left: 10px" class="normalBtn" id="copyCertData">
-            复制证书内容
-          </button>
-          <button
-            style="margin-left: 10px"
-            class="normalBtn"
-            id="copyCertKeyData"
-          >
-            复制私钥内容
-          </button>
-          <button style="margin-left: 10px" class="normalBtn" id="downlaodCert">
-            下载证书
-          </button>
+        <div class="serveBackInfo">
+          <div>DNS验证</div>
+          <div style="display: flex; align-items: center">
+            主机记录：
+            <div class="cnameText" id="hostRcode"></div>
+          </div>
+          <div style="margin-top: 10px">记录类型：TXT</div>
+          <div style="display: flex; align-items: center; margin-top: 10px">
+            记录值：
+            <div class="cnameText" id="TxtRcodeVlaue"></div>
+          </div>
+        </div>
+        <div class="certInfoFatherDiv">
+          <div class="certInfo"></div>
+          <div class="buttonsDiv">
+            <button id="getCertID" class="normalBtn">
+              第二步:点击这里获取证书
+            </button>
+            <div id="certBtns">
+              <button
+                style="margin-left: 10px"
+                class="normalBtn"
+                id="copyCertData"
+              >
+                复制证书内容
+              </button>
+              <button
+                style="margin-left: 10px"
+                class="normalBtn"
+                id="copyCertKeyData"
+              >
+                复制私钥内容
+              </button>
+              <button
+                style="margin-left: 10px"
+                class="normalBtn"
+                id="downlaodCert"
+              >
+                下载证书
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="loadingDiv">..处理中</div>
+      <div class="loadingDiv">
+        <div class="laodingContentxt">
+          <div class="load_6"></div>
+          <div>处理中...</div>
+        </div>
+      </div>
+
+      <div class="toastDiv">请输入域名</div>
     </div>
 
     <!-- 
@@ -93,8 +125,39 @@
 
     <!-- acme.sh --renew -d *.wanzishu.online  --yes-I-know-dns-manual-mode-enough-go-ahead-please -->
     <script>
+      function showToast(params, time) {
+        $(".toastDiv").show();
+        $(".toastDiv").html(params);
+        setTimeout(function () {
+          $(".toastDiv").hide();
+        }, time || 3000);
+      }
       // This is a simple JavaScript function to show an alert when the button is clicked
       $(document).ready(function () {
+        //复制主机记录
+        $("#hostRcode").click(function (event) {
+          navigator.clipboard.writeText($("#hostRcode").text()).then(
+            function () {
+              showToast("复制成功");
+            },
+            function (err) {
+              console.error("复制失败", err);
+            }
+          );
+        });
+
+        //复制主机记录
+        $("#TxtRcodeVlaue").click(function (event) {
+          navigator.clipboard.writeText($("#TxtRcodeVlaue").text()).then(
+            function () {
+              showToast("复制成功");
+            },
+            function (err) {
+              console.error("复制失败", err);
+            }
+          );
+        });
+
         //请求Text记录
         $("#getTxtRecordID").click(function (event) {
           // var email = $('input[name="email"]').val();
@@ -104,9 +167,12 @@
           //   return;
           // }
           if (domain === "") {
-            alert("请输入域名");
+            showToast("请输入域名");
             return;
           }
+
+          // 加载动画
+          $(".loadingDiv").show();
 
           $.ajax({
             url: "/getTxtRecord",
@@ -119,10 +185,33 @@
               $(".inputEmailDiv").hide(); // Hide the input field
               // Handle the response from the server
               console.log(data);
+              // 加载动画
+              $(".loadingDiv").hide();
               $(".showInfo").show(); // Show the CNAME info div
-              $(".serveBackInfo").html(
-                data.data.stdout + "\n" + data.data.stderr
-              ); // Update the CNAME info div with the response
+
+              // 正则匹配 Domain 和 TXT value
+              const match = data.data.stdout.match(/Domain: '(.*?)'/);
+              const hostRecodeText = match ? match[1] : null;
+
+              const match2 = data.data.stdout.match(/TXT value: '(.*?)'/);
+              const recodeText = match2 ? match2[1] : null;
+
+              console.log("Domain:", hostRecodeText);
+              console.log("TXT Value:", recodeText);
+              if (hostRecodeText && recodeText) {
+                $("#hostRcode").html(
+                  hostRecodeText.replace(
+                    `.${domain.split(".")[1]}.${domain.split(".")[2]}`,
+                    ""
+                  )
+                );
+                $("#TxtRcodeVlaue").html(recodeText);
+                $(".buttonsDiv").show();
+              } else {
+                $(".serveBackInfo").html(
+                  data.data.stdout + "\n" + data.data.stderr
+                ); // Update the CNAME info div with the response
+              }
             },
             error: function (xhr, status, error) {
               // Handle any errors
@@ -136,6 +225,7 @@
         $("#getCertID").click(function (event) {
           // var email = $('input[name="email"]').val();
           var domain = $('input[name="domain"]').val();
+          $(".loadingDiv").show();
           $.ajax({
             url: "/validate",
             type: "GET",
@@ -147,7 +237,17 @@
               // Handle the response from the server
               console.log(data);
               outputData = data.data;
-              $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
+              $(".loadingDiv").hide();
+              $(".certInfo").show();
+              if (data.data.stdout.indexOf("Cert success") > -1) {
+                $(".certInfo").html(
+                  "证书获取成功！请点击【复制证书内容】【复制私钥内容】或者 【下载证书】"
+                );
+                $("#getCertID").hide();
+                $("#certBtns").show();
+              } else {
+                $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
+              }
             },
             error: function (xhr, status, error) {
               // Handle any errors
@@ -162,14 +262,14 @@
             var certData = outputData.cert;
             navigator.clipboard.writeText(certData).then(
               function () {
-                alert("证书复制成功");
+                showToast("证书复制成功");
               },
               function (err) {
                 console.error("证书复制失败", err);
               }
             );
           } else {
-            alert("请先获取证书");
+            showToast("请先获取证书");
           }
         });
 
@@ -179,14 +279,14 @@
             var certKeyData = outputData.key;
             navigator.clipboard.writeText(certKeyData).then(
               function () {
-                alert("秘钥复制成功");
+                showToast("秘钥复制成功");
               },
               function (err) {
                 console.error("秘钥复制失败", err);
               }
             );
           } else {
-            alert("请先获取证书");
+            showToast("请先获取证书");
           }
         });
         // 下载证书
@@ -201,9 +301,10 @@
             zip.file(`${domain}.key`, certKeyData);
             zip.generateAsync({ type: "blob" }).then(function (content) {
               window.saveAs(content, domain + ".zip");
+              showToast("下载证书成功！");
             });
           } else {
-            alert("请先获取证书");
+            showToast("请先获取证书！");
           }
         });
         // ============================
