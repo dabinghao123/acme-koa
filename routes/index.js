@@ -115,13 +115,12 @@ router.get("/validate", async (ctx, next) => {
   }
 
   try {
-
+    let cert = "";
+    let key = "";
+    const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
+    const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
     try {
       //判断是否存在证书了
-      const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
-      const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
-      let cert = "";
-      let key = "";
       cert = fs.readFileSync(certPath, "utf8");
       key = fs.readFileSync(keyPath, "utf8");
       if (cert) {

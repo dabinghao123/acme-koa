@@ -259,7 +259,7 @@
             outputData = data.data;
             $(".loadingDiv").hide();
             $(".certInfo").show();
-            if (data.data.stdout.indexOf("Cert success") > -1) {
+            if (outputData.cert && outputData.key) { // 证书获取成功
               $(".certInfo").html(
                 "证书获取成功！请点击【复制证书内容】【复制私钥内容】或者 【下载证书】"
               );
