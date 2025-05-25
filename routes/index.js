@@ -43,6 +43,32 @@ router.get("/getTxtRecord", async (ctx, next) => {
   }
 
   try {
+
+
+    try {
+      //判断是否存在证书了
+      const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
+      const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
+      let cert = "";
+      let key = "";
+      cert = fs.readFileSync(certPath, "utf8");
+      key = fs.readFileSync(keyPath, "utf8");
+      if (cert) {
+        ctx.body = {
+          code: 200,
+          msg: "success",
+          data: {
+            stderr: "证书已经存在了,直接复制下载",
+            stdout: "证书已经存在了,直接复制下载",
+            cert: cert,
+            key: key,
+          },
+        };
+        return;
+      }
+    } catch (error) {
+      console.log("证书内容cert1= 没有拿到证书==", error);
+    }
     // 这里可以添加获取 TXT 记录的逻辑
     //acme.sh --issue --dns -d *.demo.com  --yes-I-know-dns-manual-mode-enough-go-ahead-please
     //acme.sh --renew -d *.demo.com   --yes-I-know-dns-manual-mode-enough-go-ahead-please
@@ -78,7 +104,7 @@ router.get("/getTxtRecord", async (ctx, next) => {
 
 // 获取证书验证dns
 router.get("/validate", async (ctx, next) => {
-  const { domain } = ctx.query;
+  const { domain, dnstype } = ctx.query;
   console.log("domain", domain);
   if (!domain) {
     ctx.body = {
@@ -89,71 +115,99 @@ router.get("/validate", async (ctx, next) => {
   }
 
   try {
-    //判断是否存在证书了
-    const certPath = path.join(
-      config.certDir,
-      `${domain}`,
-      "fullchain.cer"
-    );
-    const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
-    let cert = "";
-    let key = "";
+
     try {
+      //判断是否存在证书了
+      const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
+      const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
+      let cert = "";
+      let key = "";
       cert = fs.readFileSync(certPath, "utf8");
-    } catch (error) {}
-
-    if (cert) {
-      //存在证书了
-      try {
-        key = fs.readFileSync(keyPath, "utf8");
-      } catch (error) {
-        console.log("证书内容cert1= 没有拿到证书==");
+      key = fs.readFileSync(keyPath, "utf8");
+      if (cert) {
+        ctx.body = {
+          code: 200,
+          msg: "success",
+          data: {
+            stderr: "证书已经存在了,直接复制下载",
+            stdout: "证书已经存在了,直接复制下载",
+            cert: cert,
+            key: key,
+          },
+        };
+        return;
       }
-      ctx.body = {
-        code: 200,
-        msg: "success",
-        data: {
-          stderr: "证书已经存在了,直接复制下载",
-          stdout: "证书已经存在了,直接复制下载",
-          cert: cert,
-          key: key,
-        },
-      };
-
-      return;
+    } catch (error) {
+      console.log("证书内容cert1= 没有拿到证书==", error);
     }
     //acme.sh --renew -d *.wanzishu.online  --yes-I-know-dns-manual-mode-enough-go-ahead-please
     // 你可以使用 DNS 模块来查询 TXT 记录
-    const { success, stdout, stderr } = await runAcmeCommand(
-      `--renew -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please`
-    );
-    console.log(success, stdout, stderr);
-    if (success) {
-      try {
-        key = fs.readFileSync(keyPath, "utf8");
-        cert = fs.readFileSync(certPath, "utf8");
-        // 读取证书文件
-        console.log("证书内容cert1===", cert, "证书内容cert1===");
-      } catch (error) {
-        console.log("证书内容cert1= 没有拿到证书==",error);
+    if (dnstype == 1) { //dns代理验证
+      
+      //acme.sh --issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent --yes-I-know-dns-manual-mode-enough-go-ahead-please  -k 2048
+      const { success, stdout, stderr } = await runAcmeCommand(
+        `--issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent -k 2048`
+      );
+      console.log(success, stdout, stderr);
+      if (success) {
+        try {
+          key = fs.readFileSync(keyPath, "utf8");
+          cert = fs.readFileSync(certPath, "utf8");
+          // 读取证书文件
+          console.log("证书内容cert1===", cert, "证书内容cert1===");
+        } catch (error) {
+          console.log("证书内容cert1= 没有拿到证书==", error);
+        }
+        ctx.body = {
+          code: 200,
+          msg: "success",
+          data: {
+            stderr: stdout.stderr || stderr,
+            stdout: stdout.stdout || stdout,
+            cert: cert,
+            key: key,
+          },
+        };
+      } else {
+        ctx.body = {
+          code: 500,
+          msg: "获取 证书失败 记录失败1",
+          error: stderr,
+        };
       }
-      ctx.body = {
-        code: 200,
-        msg: "success",
-        data: {
-          stderr: stdout.stderr || stderr,
-          stdout: stdout.stdout || stdout,
-          cert: cert,
-          key: key,
-        },
-      };
     } else {
-      ctx.body = {
-        code: 500,
-        msg: "获取 证书失败 记录失败1",
-        error: stderr,
-      };
+      const { success, stdout, stderr } = await runAcmeCommand(
+        `--renew -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please`
+      );
+      console.log(success, stdout, stderr);
+      if (success) {
+        try {
+          key = fs.readFileSync(keyPath, "utf8");
+          cert = fs.readFileSync(certPath, "utf8");
+          // 读取证书文件
+          console.log("证书内容cert1===", cert, "证书内容cert1===");
+        } catch (error) {
+          console.log("证书内容cert1= 没有拿到证书==", error);
+        }
+        ctx.body = {
+          code: 200,
+          msg: "success",
+          data: {
+            stderr: stdout.stderr || stderr,
+            stdout: stdout.stdout || stdout,
+            cert: cert,
+            key: key,
+          },
+        };
+      } else {
+        ctx.body = {
+          code: 500,
+          msg: "获取 证书失败 记录失败1",
+          error: stderr,
+        };
+      }
     }
+
   } catch (error) {
     ctx.body = {
       code: 500,
