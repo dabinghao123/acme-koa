@@ -163,4 +163,13 @@ router.get("/validate", async (ctx, next) => {
   }
 });
 
+router.get("/getMyIp", async (ctx, next) => {
+  console.log("getMyIp===1=",ctx.ip)
+  console.log("getMyIp===2=",ctx.request)
+  ctx.body = {
+    name:"我的ip",
+    "ip":ctx.get('X-Forwarded-For')?.split(',')[0] || ctx.ip
+ }
+});
+
 module.exports = router;
