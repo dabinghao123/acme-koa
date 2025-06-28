@@ -3,6 +3,7 @@ const child_process = require("child_process");
 const util = require("util");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const execAsync = util.promisify(child_process.exec);
 // Configuration
@@ -21,6 +22,72 @@ async function runAcmeCommand(command) {
   }
 }
 
+// Helper function to check certificate expiration
+function checkCertificateExpiration(certContent) {
+  try {
+    // 使用openssl命令解析证书
+    const tempFile = `/tmp/cert_${Date.now()}.pem`;
+    fs.writeFileSync(tempFile, certContent);
+    
+    const { stdout } = child_process.execSync(`openssl x509 -in ${tempFile} -noout -dates`, { encoding: 'utf8' });
+    fs.unlinkSync(tempFile); // 清理临时文件
+    
+    // 解析输出获取到期时间
+    const lines = stdout.split('\n');
+    let notAfter = null;
+    
+    for (const line of lines) {
+      if (line.startsWith('notAfter=')) {
+        notAfter = new Date(line.replace('notAfter=', ''));
+        break;
+      }
+    }
+    
+    if (!notAfter) {
+      return { valid: false, error: '无法解析证书到期时间' };
+    }
+    
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil((notAfter - now) / (1000 * 60 * 60 * 24));
+    
+    return {
+      valid: true,
+      expiryDate: notAfter,
+      daysUntilExpiry: daysUntilExpiry,
+      isExpired: daysUntilExpiry <= 0,
+      isExpiringSoon: daysUntilExpiry <= 30 && daysUntilExpiry > 0
+    };
+  } catch (error) {
+    return { valid: false, error: error.message };
+  }
+}
+
+// Helper function to get certificate status
+function getCertificateStatus(domain) {
+  try {
+    const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
+    const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
+    
+    if (!fs.existsSync(certPath) || !fs.existsSync(keyPath)) {
+      return { exists: false, message: '证书文件不存在' };
+    }
+    
+    const cert = fs.readFileSync(certPath, "utf8");
+    const key = fs.readFileSync(keyPath, "utf8");
+    
+    const expiryInfo = checkCertificateExpiration(cert);
+    
+    return {
+      exists: true,
+      cert: cert,
+      key: key,
+      expiry: expiryInfo
+    };
+  } catch (error) {
+    return { exists: false, message: error.message };
+  }
+}
+
 router.get("/", async (ctx, next) => {
   await ctx.render("index", {
     title: "Hello Koa 2!",
@@ -31,9 +98,10 @@ router.get("/string", async (ctx, next) => {
   ctx.body = "koa2 string";
 });
 
-router.get("/getTxtRecord", async (ctx, next) => {
+// 检查证书状态的API
+router.get("/checkCertStatus", async (ctx, next) => {
   const { domain } = ctx.query;
-  console.log("domain", domain);
+  
   if (!domain) {
     ctx.body = {
       code: 400,
@@ -43,31 +111,121 @@ router.get("/getTxtRecord", async (ctx, next) => {
   }
 
   try {
+    const status = getCertificateStatus(domain);
+    
+    if (!status.exists) {
+      ctx.body = {
+        code: 404,
+        msg: "证书不存在",
+        data: {
+          exists: false,
+          message: status.message
+        }
+      };
+      return;
+    }
 
+    let statusMessage = "证书有效";
+    let statusType = "valid";
+    
+    if (!status.expiry.valid) {
+      statusMessage = "证书解析失败";
+      statusType = "error";
+    } else if (status.expiry.isExpired) {
+      statusMessage = "证书已过期";
+      statusType = "expired";
+    } else if (status.expiry.isExpiringSoon) {
+      statusMessage = `证书即将过期（剩余${status.expiry.daysUntilExpiry}天）`;
+      statusType = "expiring";
+    } else {
+      statusMessage = `证书有效（剩余${status.expiry.daysUntilExpiry}天）`;
+      statusType = "valid";
+    }
 
-    try {
-      //判断是否存在证书了
-      const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
-      const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
-      let cert = "";
-      let key = "";
-      cert = fs.readFileSync(certPath, "utf8");
-      key = fs.readFileSync(keyPath, "utf8");
-      if (cert) {
+    ctx.body = {
+      code: 200,
+      msg: "success",
+      data: {
+        exists: true,
+        domain: domain,
+        statusType: statusType,
+        statusMessage: statusMessage,
+        expiryDate: status.expiry.expiryDate,
+        daysUntilExpiry: status.expiry.daysUntilExpiry,
+        isExpired: status.expiry.isExpired,
+        isExpiringSoon: status.expiry.isExpiringSoon,
+        cert: status.cert,
+        key: status.key
+      }
+    };
+  } catch (error) {
+    ctx.body = {
+      code: 500,
+      msg: "检查证书状态失败",
+      error: error.message,
+    };
+  }
+});
+
+router.get("/getTxtRecord", async (ctx, next) => {
+  const { domain, forceRenew } = ctx.query;
+  console.log("domain", domain, "forceRenew", forceRenew);
+  if (!domain) {
+    ctx.body = {
+      code: 400,
+      msg: "缺少domain参数",
+    };
+    return;
+  }
+
+  try {
+    // 检查证书状态
+    const status = getCertificateStatus(domain);
+    
+    // 如果证书存在且没有强制重新生成，检查是否需要续期
+    if (status.exists && !forceRenew) {
+      if (status.expiry.valid && !status.expiry.isExpired && !status.expiry.isExpiringSoon) {
+        // 证书有效且不即将过期，直接返回现有证书
         ctx.body = {
           code: 200,
           msg: "success",
           data: {
-            stderr: "证书已经存在了,直接复制下载",
-            stdout: "证书已经存在了,直接复制下载",
-            cert: cert,
-            key: key,
+            stderr: `证书有效（剩余${status.expiry.daysUntilExpiry}天），直接使用现有证书`,
+            stdout: `证书有效（剩余${status.expiry.daysUntilExpiry}天），直接使用现有证书`,
+            cert: status.cert,
+            key: status.key,
+            certStatus: {
+              statusType: "valid",
+              daysUntilExpiry: status.expiry.daysUntilExpiry,
+              expiryDate: status.expiry.expiryDate
+            }
+          },
+        };
+        return;
+      } else if (status.expiry.valid && (status.expiry.isExpired || status.expiry.isExpiringSoon)) {
+        // 证书过期或即将过期，提示用户
+        const message = status.expiry.isExpired ? 
+          "证书已过期，需要重新生成" : 
+          `证书即将过期（剩余${status.expiry.daysUntilExpiry}天），建议重新生成`;
+        
+        ctx.body = {
+          code: 200,
+          msg: "success",
+          data: {
+            stderr: message,
+            stdout: message,
+            cert: status.cert,
+            key: status.key,
+            certStatus: {
+              statusType: status.expiry.isExpired ? "expired" : "expiring",
+              daysUntilExpiry: status.expiry.daysUntilExpiry,
+              expiryDate: status.expiry.expiryDate,
+              needsRenewal: true
+            }
           },
         };
         return;
       }
-    } catch (error) {
-      console.log("证书内容cert1= 没有拿到证书==", error);
     }
     // 这里可以添加获取 TXT 记录的逻辑
     //acme.sh --issue --dns -d *.demo.com  --yes-I-know-dns-manual-mode-enough-go-ahead-please
@@ -104,8 +262,8 @@ router.get("/getTxtRecord", async (ctx, next) => {
 
 // 获取证书验证dns
 router.get("/validate", async (ctx, next) => {
-  const { domain, dnstype } = ctx.query;
-  console.log("domain", domain);
+  const { domain, dnstype, forceRenew } = ctx.query;
+  console.log("domain", domain, "dnstype", dnstype, "forceRenew", forceRenew);
   if (!domain) {
     ctx.body = {
       code: 400,
@@ -119,25 +277,31 @@ router.get("/validate", async (ctx, next) => {
     let key = "";
     const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
     const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
-    try {
-      //判断是否存在证书了
-      cert = fs.readFileSync(certPath, "utf8");
-      key = fs.readFileSync(keyPath, "utf8");
-      if (cert) {
+    
+    // 检查证书状态
+    const status = getCertificateStatus(domain);
+    
+    // 如果证书存在且没有强制重新生成，检查是否需要续期
+    if (status.exists && !forceRenew) {
+      if (status.expiry.valid && !status.expiry.isExpired && !status.expiry.isExpiringSoon) {
+        // 证书有效且不即将过期，直接返回现有证书
         ctx.body = {
           code: 200,
           msg: "success",
           data: {
-            stderr: "证书已经存在了,直接复制下载",
-            stdout: "证书已经存在了,直接复制下载",
-            cert: cert,
-            key: key,
+            stderr: `证书有效（剩余${status.expiry.daysUntilExpiry}天），直接使用现有证书`,
+            stdout: `证书有效（剩余${status.expiry.daysUntilExpiry}天），直接使用现有证书`,
+            cert: status.cert,
+            key: status.key,
+            certStatus: {
+              statusType: "valid",
+              daysUntilExpiry: status.expiry.daysUntilExpiry,
+              expiryDate: status.expiry.expiryDate
+            }
           },
         };
         return;
       }
-    } catch (error) {
-      console.log("证书内容cert1= 没有拿到证书==", error);
     }
     //acme.sh --renew -d *.wanzishu.online  --yes-I-know-dns-manual-mode-enough-go-ahead-please
     // 你可以使用 DNS 模块来查询 TXT 记录
