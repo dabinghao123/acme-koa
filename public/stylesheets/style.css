@@ -1,134 +1,339 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #333;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 a {
-  color: #00b7ff;
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #764ba2;
 }
 
 .certDiv {
-  /* padding-top: 100px; */
-  padding-bottom: 40px;
-  border: 1px solid #1062fe;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .title-new {
   color: #ffffff;
-  padding: 19px 16px;
-  background-color: #1062fe;
-  border-radius: 4px 4px 0 0;
+  padding: 30px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px 20px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+}
+
+.title-new::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .inputEmailDiv {
   display: block;
-  padding-right: 0;
-  padding-left: 0;
-  background-color: #ffffff;
-  box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.05);
-  padding-top: 10px;
-  padding: 10px;
-  margin: 10px;
+  padding: 40px;
+  background-color: transparent;
+}
+
+.radio-group {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid transparent;
+}
+
+.radio-item:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.radio-item.selected {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
+}
+
+.radio-item input[type="radio"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #667eea;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.radio-item input[type="radio"]:checked {
+  background: #667eea;
+  border-color: #667eea;
+}
+
+.radio-item input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+.radio-item label {
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.input-group {
+  margin-bottom: 30px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
 }
 
 .inputEmailDiv .inputDev {
   display: block;
   width: 100%;
-  height: 42px;
-  padding: 8px 16px;
-  font-size: 14px;
+  height: 56px;
+  padding: 16px 20px;
+  font-size: 16px;
   line-height: 24px;
-  flex: 1;
-  color: #2a2e36;
-  background-color: #fff;
-  background-image: none;
-  border: 1px solid #dcdee2;
-  border-radius: 2px;
-  transition: border-color 0.24s ease, box-shadow 0.24s ease;
+  color: #333;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.inputEmailDiv .inputDev:focus {
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.inputEmailDiv .inputDev::placeholder {
+  color: #999;
 }
 
 #getTxtRecordID {
   color: #fff;
-  background-color: #1062fe;
-  border-color: #1062fe;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
   display: inline-flex;
-  height: 42px;
+  height: 56px;
   justify-content: center;
   align-items: center;
   margin-bottom: 0;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
-  vertical-align: middle;
-  touch-action: manipulation;
   cursor: pointer;
-  background-image: none;
-  border: 1px solid transparent;
   white-space: nowrap;
   outline: 0;
-  padding: 8px 16px;
-  font-size: 14px;
-  line-height: 24px;
-  border-radius: 2px;
+  padding: 16px 32px;
+  font-size: 16px;
+  border-radius: 12px;
   user-select: none;
-  transition: all 0.24s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+#getTxtRecordID:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+#getTxtRecordID:active {
+  transform: translateY(-1px);
+}
+
+#getTxtRecordID::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+#getTxtRecordID:hover::before {
+  left: 100%;
 }
 .buttonsDiv {
   display: none;
-  margin-top: 10px;
+  margin-top: 30px;
+  text-align: center;
 }
+
 #certBtns {
   display: none;
+  margin-top: 20px;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
+
+#certBtns.show {
+  display: flex;
+}
+
 .normalBtn {
   color: #fff;
-  background-color: #1062fe;
-  border-color: #1062fe;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
   display: inline-flex;
-  height: 42px;
+  height: 48px;
   justify-content: center;
   align-items: center;
-  margin-bottom: 0;
+  margin: 5px;
   font-weight: 500;
   text-align: center;
-  vertical-align: middle;
-  touch-action: manipulation;
   cursor: pointer;
-  background-image: none;
-  border: 1px solid transparent;
   white-space: nowrap;
   outline: 0;
-  padding: 8px 16px;
+  padding: 12px 24px;
   font-size: 14px;
-  line-height: 24px;
-  border-radius: 2px;
+  border-radius: 10px;
   user-select: none;
-  transition: all 0.24s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.normalBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.normalBtn:active {
+  transform: translateY(0);
+}
+
+.normalBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.normalBtn:hover::before {
+  left: 100%;
 }
 .showInfo {
   display: none;
   font-size: 16px;
-  color: #666;
-  /* padding: 10px; */
-  margin: 10px;
+  color: #333;
+  margin: 20px 40px;
+  animation: fadeInUp 0.5s ease;
 }
+
 .certInfo {
   display: none;
-  margin-top: 10px;
-  white-space: pre;
+  margin-top: 20px;
+  white-space: pre-wrap;
   font-size: 16px;
-  color: #666;
-  border: 1px solid #ccc;
-  padding: 10px;
+  color: #333;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  line-height: 1.6;
 }
+
 .serveBackInfo {
-  /* display: none; */
-  /* white-space: pre; */
   font-size: 16px;
-  color: #666;
-  border: 1px solid #ccc;
-  padding: 10px;
+  color: #333;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #333;
+  min-width: 100px;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .certInfoFatherDiv {
@@ -136,12 +341,42 @@ a {
 }
 
 .cnameText {
-  background-color: #003494;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow-x: auto;
   color: #fff;
-  padding: 6px;
-  border-radius: 5px;
+  padding: 12px 16px;
+  border-radius: 8px;
   cursor: pointer;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  position: relative;
+  word-break: break-all;
+}
+
+.cnameText:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.cnameText::after {
+  content: '点击复制';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cnameText:hover::after {
+  opacity: 1;
 }
 
 .loadingDiv {
@@ -152,46 +387,73 @@ a {
   bottom: 0;
   color: white;
   display: none;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  border-radius: 20px;
+  z-index: 1000;
 }
 
 .toastDiv {
-  position: absolute;
-  top: 50%;
+  position: fixed;
+  top: 20px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   color: white;
   display: none;
-  padding: 10px;
-  background: black;
-  border-radius: 5px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  font-weight: 500;
+  animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .laodingContentxt {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
+  gap: 20px;
+}
+
+.laodingContentxt div {
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .load_6 {
   display: inline-block;
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
 }
+
 .load_6:after {
   content: " ";
   display: block;
   border-radius: 50%;
   width: 0;
   height: 0;
-  margin: 6px;
+  margin: 8px;
   box-sizing: border-box;
-  border: 26px solid #61e8ea;
-  border-color: #61e8ea transparent #61e8ea transparent;
+  border: 32px solid #667eea;
+  border-color: #667eea transparent #764ba2 transparent;
   animation: load_6 1.2s infinite;
 }
+
 @keyframes load_6 {
   0% {
     transform: rotate(0);
@@ -204,4 +466,164 @@ a {
   100% {
     transform: rotate(1800deg);
   }
+}
+
+/* 提示信息样式 */
+.help-text {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.help-text p {
+  margin-bottom: 10px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.help-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .inputEmailDiv {
+    padding: 20px;
+  }
+  
+  .title-new {
+    padding: 20px;
+    font-size: 24px;
+  }
+  
+  .radio-group {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  #certBtns {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .normalBtn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .showInfo {
+    margin: 20px;
+  }
+}
+
+/* 页脚样式 */
+.footer {
+  margin-top: 40px;
+  padding: 30px 0;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-content p {
+  margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.footer-links {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #fff;
+}
+
+.footer-links span {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 成功状态样式 */
+.success-message {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+/* 错误状态样式 */
+.error-message {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 8px 20px rgba(244, 67, 54, 0.3);
+}
+
+/* 步骤指示器 */
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  gap: 20px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 25px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.05);
+}
+
+.step.completed {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
 }
