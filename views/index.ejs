@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
-  <title>
-    <%= title %>
-  </title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSL证书生成工具 - <%= title %></title>
   <link rel="stylesheet" href="/stylesheets/style.css" />
   <script src="/js/jquery-3.6.0.min.js"></script>
   <script src="/js/FileSaver.min.js"></script>
@@ -12,70 +12,94 @@
 </head>
 
 <body>
-  <!-- <h1><%= title %></h1> -->
-  <!-- <p>EJS Welcome to <%= title %></p> -->
-  <div class="certDiv">
-    <div class="title-new">生成证书</div>
-    <div class="inputEmailDiv">
-      <!-- <div>
-          请输入邮箱:
-          <input type="text" value="408181273@qq.com" name="email" />
-        </div> -->
-      <input type="radio" name="bedStatus" value="1" checked />
-      <label>DNS代理模式</label>
-      <input type="radio" name="bedStatus" value="2" />
-      <label>DNS验证</label>
-      <div style="display: flex; align-items: center;margin-top: 20px;">
-        <span>输入域名:</span>
-        <input class="inputDev" type="text" name="domain" placeholder="*.baidu.com" />
-      </div>
-      <div style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-          ">
-        <button id="getTxtRecordID">第一步:输入域名点击这里请求解析</button>
-      </div>
-
-      <div>
-        <p>请在上方输入域名</p>
-        <p>注意：域名需要添加Text解析到指定的服务器</p>
-        <p>注意：如果是泛域名，请在上方输入*.baidu.com</p>
-      </div>
-    </div>
-    <!-- 服务器返回的数据 -->
-
-    <div class="showInfo">
-      <!-- 请求Text记录 -->
-      <div class="serveBackInfo">
-        <div style="margin-bottom: 20px;">DNS验证(去域名管理后台添加解析)</div>
-        <div style="display: flex; align-items: center">
-          主机记录：
-          <div class="cnameText" id="hostRcode"></div>
+  <div class="container">
+    <div class="certDiv">
+      <div class="title-new">🔒 SSL证书生成工具</div>
+      <div class="inputEmailDiv">
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="bedStatus" value="1" checked id="dns-proxy" />
+            <label for="dns-proxy">DNS代理模式</label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="bedStatus" value="2" id="dns-verify" />
+            <label for="dns-verify">DNS验证</label>
+          </div>
         </div>
-        <div style="margin-top: 10px" id="TxtRcodeType">记录类型：TXT</div>
-        <div style="display: flex; align-items: center; margin-top: 10px">
-          记录值：
-          <div class="cnameText" id="TxtRcodeVlaue"></div>
+        
+        <div class="input-group">
+          <label for="domain-input">输入域名:</label>
+          <input class="inputDev" type="text" name="domain" id="domain-input" placeholder="例如: *.example.com 或 example.com" />
+        </div>
+        
+        <!-- 步骤指示器 -->
+        <div class="step-indicator">
+          <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <span>配置域名</span>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <span>DNS验证</span>
+          </div>
+          <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <span>获取证书</span>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+          <button id="getTxtRecordID">🚀 开始生成证书</button>
+        </div>
+
+        <div class="help-text">
+          <p><strong>📋 使用说明：</strong></p>
+          <p>• 请在上方输入您要申请证书的域名</p>
+          <p>• DNS验证模式：需要手动添加TXT解析记录到您的域名管理后台</p>
+          <p>• DNS代理模式：自动完成验证，无需手动操作</p>
+          <p>• 泛域名证书：请输入 *.example.com 格式</p>
         </div>
       </div>
-      <div class="certInfoFatherDiv">
-        <div class="certInfo"></div>
-        <div class="buttonsDiv">
-          <button id="getCertID" class="normalBtn">
-            第二步:点击这里获取证书
-          </button>
-          <div id="certBtns">
-            <button style="margin-left: 10px" class="normalBtn" id="copyCertData">
-              复制证书内容
+      <!-- 服务器返回的数据 -->
+      <div class="showInfo">
+        <!-- 请求Text记录 -->
+        <div class="serveBackInfo">
+          <div style="margin-bottom: 20px; font-weight: 600; color: #667eea;">
+            📝 DNS验证信息 (请在域名管理后台添加以下解析记录)
+          </div>
+          <div class="info-item">
+            <span class="info-label">主机记录：</span>
+            <div class="cnameText" id="hostRcode"></div>
+          </div>
+          <div class="info-item" id="TxtRcodeType">
+            <span class="info-label">记录类型：</span>
+            <span>TXT</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">记录值：</span>
+            <div class="cnameText" id="TxtRcodeVlaue"></div>
+          </div>
+        </div>
+        <div class="certInfoFatherDiv">
+          <div class="certInfo"></div>
+          <div class="buttonsDiv">
+            <button id="getCertID" class="normalBtn">
+              ⚡ 第二步：获取证书
             </button>
-            <button style="margin-left: 10px" class="normalBtn" id="copyCertKeyData">
-              复制私钥内容
-            </button>
-            <button style="margin-left: 10px" class="normalBtn" id="downlaodCert">
-              下载证书
-            </button>
+            <div id="certBtns">
+              <button class="normalBtn" id="copyCertData">
+                📋 复制证书内容
+              </button>
+              <button class="normalBtn" id="copyCertKeyData">
+                🔑 复制私钥内容
+              </button>
+              <button class="normalBtn" id="downlaodCert">
+                💾 下载证书文件
+              </button>
+              <button class="normalBtn" id="resetForm" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);">
+                🔄 重新开始
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -84,12 +108,26 @@
     <div class="loadingDiv">
       <div class="laodingContentxt">
         <div class="load_6"></div>
-        <div>处理中...</div>
+        <div>🔄 正在处理中，请稍候...</div>
       </div>
     </div>
 
     <div class="toastDiv">请输入域名</div>
   </div>
+  
+  <!-- 页脚信息 -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>🔐 基于 ACME.sh 的免费 SSL 证书生成工具</p>
+      <p>支持 Let's Encrypt、ZeroSSL 等多个证书颁发机构</p>
+      <div class="footer-links">
+        <a href="https://github.com/acmesh-official/acme.sh" target="_blank">📚 ACME.sh 文档</a>
+        <span>|</span>
+        <a href="https://letsencrypt.org/" target="_blank">🌐 Let's Encrypt</a>
+      </div>
+    </div>
+  </footer>
+</div>
 
   <!-- 
       Using CA: https://acme.zerossl.com/v2/DV90
@@ -121,12 +159,29 @@
     }
 
     let selectRadio = 1;
-    // This is a simple JavaScript function to show an alert when the button is clicked
+    
     $(document).ready(function () {
+      // 添加页面加载动画
+      $(".certDiv").css("opacity", "0").animate({opacity: 1}, 800);
+      
+      // 步骤控制函数
+      function updateStep(stepNumber) {
+        $('.step').removeClass('active completed');
+        for (let i = 1; i < stepNumber; i++) {
+          $(`#step${i}`).addClass('completed');
+        }
+        $(`#step${stepNumber}`).addClass('active');
+      }
 
       //input radio 点击事件
       $('input[type=radio]').click(function () {
-        $('input:radio[name=bedStatus]').attr('checked', false);
+        $('input:radio[name=bedStatus]').prop('checked', false);
+        $(this).prop('checked', true);
+        
+        // 添加选中效果
+        $('.radio-item').removeClass('selected');
+        $(this).closest('.radio-item').addClass('selected');
+        
         if (this.value == 1) {
           selectRadio = 1;
           console.log("DNS代理模式");
@@ -174,6 +229,7 @@
         }
 
         if (selectRadio == 1) { //DNS代理模式
+          updateStep(2); // 进入第二步
           $(".inputEmailDiv").hide(); // Hide the input field
           $("#TxtRcodeType").html("记录类型：CNAME");
           $(".showInfo").show(); // Show the CNAME info div
@@ -198,6 +254,7 @@
               domain: domain,
             },
             success: function (data) {
+              updateStep(2); // 进入第二步
               $(".inputEmailDiv").hide(); // Hide the input field
               // Handle the response from the server
               console.log(data);
@@ -260,11 +317,13 @@
             $(".loadingDiv").hide();
             $(".certInfo").show();
             if (outputData.cert && outputData.key) { // 证书获取成功
+              updateStep(3); // 进入第三步
               $(".certInfo").html(
-                "证书获取成功！请点击【复制证书内容】【复制私钥内容】或者 【下载证书】"
+                "🎉 证书获取成功！请点击下方按钮复制证书内容或下载证书文件。"
               );
+              $(".certInfo").addClass('success-message');
               $("#getCertID").hide();
-              $("#certBtns").show();
+              $("#certBtns").addClass('show');
             } else {
               $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
             }
@@ -327,6 +386,28 @@
           showToast("请先获取证书！");
         }
       });
+      
+      // 重置表单
+      $("#resetForm").click(function (event) {
+        // 重置所有状态
+        updateStep(1);
+        $(".inputEmailDiv").show();
+        $(".showInfo").hide();
+        $(".certInfo").hide().removeClass('success-message error-message');
+        $(".buttonsDiv").hide();
+        $("#certBtns").removeClass('show');
+        $("#getCertID").show();
+        $('input[name="domain"]').val('');
+        $('input[name="bedStatus"][value="1"]').prop('checked', true);
+        $('.radio-item').removeClass('selected');
+        $('input[name="bedStatus"][value="1"]').closest('.radio-item').addClass('selected');
+        selectRadio = 1;
+        outputData = null;
+        showToast("已重置，可以重新开始生成证书");
+      });
+      
+      // 初始化选中状态
+      $('input[name="bedStatus"]:checked').closest('.radio-item').addClass('selected');
       // ============================
     });
   </script>
