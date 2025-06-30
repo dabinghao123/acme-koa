@@ -48,6 +48,22 @@
           </div>
         </div>
         
+        <!-- 证书状态检查区域 -->
+        <div class="cert-status-section" style="display: none;">
+          <div class="cert-status-card">
+            <h3>📋 证书状态</h3>
+            <div id="certStatusInfo"></div>
+            <div class="cert-actions" style="margin-top: 15px;">
+              <button id="checkCertStatus" class="normalBtn" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+                🔍 检查证书状态
+              </button>
+              <button id="forceRenewCert" class="normalBtn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); display: none;">
+                🔄 强制重新生成
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div style="text-align: center; margin-bottom: 20px;">
           <button id="getTxtRecordID">🚀 开始生成证书</button>
         </div>
@@ -172,6 +188,113 @@
         }
         $(`#step${stepNumber}`).addClass('active');
       }
+      
+      // 检查证书状态
+      function checkCertificateStatus(domain) {
+        if (!domain) {
+          showToast("请先输入域名");
+          return;
+        }
+        
+        $.ajax({
+          url: "/checkCertStatus",
+          type: "GET",
+          data: { domain: domain },
+          success: function(response) {
+            if (response.code === 200) {
+              displayCertificateStatus(response.data);
+              $(".cert-status-section").show();
+            } else if (response.code === 404) {
+              displayCertificateStatus({
+                exists: false,
+                statusType: "none",
+                statusMessage: "未找到证书文件"
+              });
+              $(".cert-status-section").show();
+            } else {
+              showToast("检查证书状态失败: " + response.msg);
+            }
+          },
+          error: function() {
+            showToast("检查证书状态时发生错误");
+          }
+        });
+      }
+      
+      // 显示证书状态
+      function displayCertificateStatus(data) {
+        let statusHtml = '';
+        let statusClass = '';
+        
+        switch(data.statusType) {
+          case 'valid':
+            statusClass = 'cert-status-valid';
+            statusHtml = `
+              <div class="cert-status-info ${statusClass}">
+                <div>✅ ${data.statusMessage}</div>
+                <div style="margin-top: 8px; font-size: 14px;">
+                  到期时间: ${new Date(data.expiryDate).toLocaleString('zh-CN')}
+                </div>
+              </div>
+            `;
+            $("#forceRenewCert").show();
+            break;
+          case 'expiring':
+            statusClass = 'cert-status-expiring';
+            statusHtml = `
+              <div class="cert-status-info ${statusClass}">
+                <div>⚠️ ${data.statusMessage}</div>
+                <div style="margin-top: 8px; font-size: 14px;">
+                  到期时间: ${new Date(data.expiryDate).toLocaleString('zh-CN')}
+                </div>
+                <div style="margin-top: 8px; font-size: 14px; font-weight: bold;">
+                  建议立即重新生成证书
+                </div>
+              </div>
+            `;
+            $("#forceRenewCert").show();
+            break;
+          case 'expired':
+            statusClass = 'cert-status-expired';
+            statusHtml = `
+              <div class="cert-status-info ${statusClass}">
+                <div>❌ ${data.statusMessage}</div>
+                <div style="margin-top: 8px; font-size: 14px;">
+                  到期时间: ${new Date(data.expiryDate).toLocaleString('zh-CN')}
+                </div>
+                <div style="margin-top: 8px; font-size: 14px; font-weight: bold;">
+                  必须重新生成证书
+                </div>
+              </div>
+            `;
+            $("#forceRenewCert").show();
+            break;
+          case 'error':
+            statusClass = 'cert-status-error';
+            statusHtml = `
+              <div class="cert-status-info ${statusClass}">
+                <div>❌ ${data.statusMessage}</div>
+              </div>
+            `;
+            $("#forceRenewCert").show();
+            break;
+          case 'none':
+          default:
+            statusClass = 'cert-status-none';
+            statusHtml = `
+              <div class="cert-status-info ${statusClass}">
+                <div>📝 ${data.statusMessage || '未找到证书'}</div>
+                <div style="margin-top: 8px; font-size: 14px;">
+                  请生成新的证书
+                </div>
+              </div>
+            `;
+            $("#forceRenewCert").hide();
+            break;
+        }
+        
+        $("#certStatusInfo").html(statusHtml);
+      }
 
       //input radio 点击事件
       $('input[type=radio]').click(function () {
@@ -252,6 +375,7 @@
             data: {
               // email: email,
               domain: domain,
+              forceRenew: window.forceRenew || false,
             },
             success: function (data) {
               updateStep(2); // 进入第二步
@@ -308,7 +432,8 @@
           data: {
             // email: email,
             domain: domain,
-            dnstype: selectRadio
+            dnstype: selectRadio,
+            forceRenew: window.forceRenew || false,
           },
           success: function (data) {
             // Handle the response from the server
@@ -324,6 +449,8 @@
               $(".certInfo").addClass('success-message');
               $("#getCertID").hide();
               $("#certBtns").addClass('show');
+              // 重置强制重新生成标志
+              window.forceRenew = false;
             } else {
               $(".certInfo").html(data.data.stdout + "\n" + data.data.stderr);
             }
@@ -404,6 +531,50 @@
         selectRadio = 1;
         outputData = null;
         showToast("已重置，可以重新开始生成证书");
+      });
+      
+      // 检查证书状态按钮
+      $("#checkCertStatus").click(function() {
+        const domain = $('input[name="domain"]').val().trim();
+        checkCertificateStatus(domain);
+      });
+      
+      // 强制重新生成证书按钮
+      $("#forceRenewCert").click(function() {
+        const domain = $('input[name="domain"]').val().trim();
+        if (!domain) {
+          showToast("请先输入域名");
+          return;
+        }
+        
+        if (confirm("确定要强制重新生成证书吗？这将覆盖现有的证书文件。")) {
+          // 隐藏证书状态区域，重置界面
+          $(".cert-status-section").hide();
+          updateStep(1);
+          $(".showInfo").hide();
+          $(".certInfo").hide().removeClass('success-message error-message');
+          $(".buttonsDiv").hide();
+          $("#certBtns").removeClass('show');
+          $("#getCertID").show();
+          
+          // 设置强制重新生成标志并开始生成
+          window.forceRenew = true;
+          $("#getTxtRecordID").click();
+        }
+      });
+      
+      // 域名输入框变化时自动检查证书状态
+      $('input[name="domain"]').on('input', function() {
+        const domain = $(this).val().trim();
+        if (domain && domain.length > 3) {
+          // 延迟检查，避免频繁请求
+          clearTimeout(window.domainCheckTimeout);
+          window.domainCheckTimeout = setTimeout(function() {
+            checkCertificateStatus(domain);
+          }, 1000);
+        } else {
+          $(".cert-status-section").hide();
+        }
       });
       
       // 初始化选中状态
