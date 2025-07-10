@@ -84,6 +84,10 @@
             📝 DNS验证信息 (请在域名管理后台添加以下解析记录)
           </div>
           <div class="info-item">
+            <span class="info-label">当前域名：</span>
+            <div class="cnameText" id="hostName"></div>
+          </div>
+          <div class="info-item">
             <span class="info-label">主机记录：</span>
             <div class="cnameText" id="hostRcode"></div>
           </div>
@@ -315,6 +319,7 @@
         }
       });
       //复制主机记录
+
       $("#hostRcode").click(function (event) {
         navigator.clipboard.writeText($("#hostRcode").text()).then(
           function () {
@@ -346,11 +351,12 @@
         //   alert("请输入邮箱地址");
         //   return;
         // }
+        
         if (domain === "") {
           showToast("请输入域名");
           return;
         }
-
+        $("#hostName").html(domain);
         if (selectRadio == 1) { //DNS代理模式
           updateStep(2); // 进入第二步
           $(".inputEmailDiv").hide(); // Hide the input field
