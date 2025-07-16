@@ -23,15 +23,16 @@ async function runAcmeCommand(command) {
 }
 
 // Helper function to check certificate expiration
-function checkCertificateExpiration(certContent) {
+async function checkCertificateExpiration(certContent) {
   try {
     // 使用openssl命令解析证书
     const tempFile = `/tmp/cert_${Date.now()}.pem`;
     fs.writeFileSync(tempFile, certContent);
-    
-    const { stdout } = child_process.execSync(`openssl x509 -in ${tempFile} -noout -dates`, { encoding: 'utf8' });
+    console.log("tempFile===",tempFile)
+    const { success, stdout, stderr } = await runAcmeCommand(`openssl x509 -in ${tempFile} -noout -dates`);
+    //  child_process.execSync(`openssl x509 -in ${tempFile} -noout -dates`, { encoding: 'utf8' });
     fs.unlinkSync(tempFile); // 清理临时文件
-    
+    console.log("stdout====",stdout)
     // 解析输出获取到期时间
     const lines = stdout.split('\n');
     let notAfter = null;
@@ -42,14 +43,14 @@ function checkCertificateExpiration(certContent) {
         break;
       }
     }
-    
+    console.log("notAfter=3333===",notAfter)
     if (!notAfter) {
       return { valid: false, error: '无法解析证书到期时间' };
     }
-    
+    console.log("notAfter===bing===",notAfter)
     const now = new Date();
     const daysUntilExpiry = Math.ceil((notAfter - now) / (1000 * 60 * 60 * 24));
-    
+    console.log("notAfter===bing=222==",daysUntilExpiry)
     return {
       valid: true,
       expiryDate: notAfter,
@@ -63,7 +64,7 @@ function checkCertificateExpiration(certContent) {
 }
 
 // Helper function to get certificate status
-function getCertificateStatus(domain) {
+async function getCertificateStatus(domain) {
   try {
     const certPath = path.join(config.certDir, `${domain}`, "fullchain.cer");
     const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
@@ -75,7 +76,7 @@ function getCertificateStatus(domain) {
     const cert = fs.readFileSync(certPath, "utf8");
     const key = fs.readFileSync(keyPath, "utf8");
     
-    const expiryInfo = checkCertificateExpiration(cert);
+    const expiryInfo = await checkCertificateExpiration(cert);
     
     return {
       exists: true,
@@ -111,7 +112,7 @@ router.get("/checkCertStatus", async (ctx, next) => {
   }
 
   try {
-    const status = getCertificateStatus(domain);
+    const status = await getCertificateStatus(domain);
     
     if (!status.exists) {
       ctx.body = {
@@ -127,10 +128,12 @@ router.get("/checkCertStatus", async (ctx, next) => {
 
     let statusMessage = "证书有效";
     let statusType = "valid";
+    let errorMessage = '';
     
     if (!status.expiry.valid) {
       statusMessage = "证书解析失败";
       statusType = "error";
+      errorMessage = status.message;
     } else if (status.expiry.isExpired) {
       statusMessage = "证书已过期";
       statusType = "expired";
@@ -150,12 +153,14 @@ router.get("/checkCertStatus", async (ctx, next) => {
         domain: domain,
         statusType: statusType,
         statusMessage: statusMessage,
+        status: status,
         expiryDate: status.expiry.expiryDate,
         daysUntilExpiry: status.expiry.daysUntilExpiry,
         isExpired: status.expiry.isExpired,
         isExpiringSoon: status.expiry.isExpiringSoon,
         cert: status.cert,
-        key: status.key
+        key: status.key,
+        msg: "检查证书状态失败2222"
       }
     };
   } catch (error) {
@@ -180,7 +185,7 @@ router.get("/getTxtRecord", async (ctx, next) => {
 
   try {
     // 检查证书状态
-    const status = getCertificateStatus(domain);
+    const status = await getCertificateStatus(domain);
     
     // 如果证书存在且没有强制重新生成，检查是否需要续期
     if (status.exists && !forceRenew) {
@@ -279,7 +284,7 @@ router.get("/validate", async (ctx, next) => {
     const keyPath = path.join(config.certDir, `${domain}`, `${domain}.key`);
     
     // 检查证书状态
-    const status = getCertificateStatus(domain);
+    const status = await getCertificateStatus(domain);
     
     // 如果证书存在且没有强制重新生成，检查是否需要续期
     if (status.exists && !forceRenew) {
@@ -308,9 +313,9 @@ router.get("/validate", async (ctx, next) => {
     if (dnstype == 1) { //dns代理验证
       
       //acme.sh --issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent --yes-I-know-dns-manual-mode-enough-go-ahead-please  -k 2048
-      const { success, stdout, stderr } = await runAcmeCommand(
-        `--issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent -k 2048`
-      );
+      const commandText =  forceRenew ? `--renew -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please` : `--issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent -k 2048` 
+      console.log("====commandText======",commandText)
+      const { success, stdout, stderr } = await runAcmeCommand(commandText);
       console.log(success, stdout, stderr);
       if (success) {
         try {
