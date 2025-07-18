@@ -313,7 +313,7 @@ router.get("/validate", async (ctx, next) => {
     if (dnstype == 1) { //dns代理验证
       
       //acme.sh --issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent --yes-I-know-dns-manual-mode-enough-go-ahead-please  -k 2048
-      const commandText =  forceRenew ? `--renew -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please` : `--issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent -k 2048` 
+      const commandText =  (`${forceRenew}` === "true" ? `--renew -d ${domain} --yes-I-know-dns-manual-mode-enough-go-ahead-please` : `--issue  -d  ${domain} --challenge-alias bbxiuc.cn --dns dns_tencent -k 2048` )
       console.log("====commandText======",commandText)
       const { success, stdout, stderr } = await runAcmeCommand(commandText);
       console.log(success, stdout, stderr);
