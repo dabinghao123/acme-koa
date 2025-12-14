@@ -89,14 +89,33 @@ async function getCertificateStatus(domain) {
   }
 }
 
+function deleteCertificate(domain) {
+  return new Promise((resolve, reject) => {
+    //删除文件夹
+    const command = `rm -rf ${config.certDir}/${domain}`;
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
 router.get("/", async (ctx, next) => {
   await ctx.render("index", {
     title: "Hello Koa 2!",
   });
 });
 
-router.get("/string", async (ctx, next) => {
-  ctx.body = "koa2 string";
+router.get("/dbname", async (ctx, next) => {
+  const [rows] =  await ctx.db.execute('SELECT * FROM domains');
+  ctx.body = {
+    code: 200,
+    msg: "success",
+    data: rows
+  };
 });
 
 // 检查证书状态的API
@@ -231,6 +250,9 @@ router.get("/getTxtRecord", async (ctx, next) => {
         };
         return;
       }
+    }else if(status.exists && forceRenew){ //存在证书
+         //删除旧证书
+         await deleteCertificate(domain);
     }
     // 这里可以添加获取 TXT 记录的逻辑
     //acme.sh --issue --dns -d *.demo.com  --yes-I-know-dns-manual-mode-enough-go-ahead-please

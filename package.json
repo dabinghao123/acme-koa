@@ -6,7 +6,8 @@
     "start": "node bin/www",
     "dev": "./node_modules/.bin/nodemon bin/www",
     "prd": "pm2 start bin/www",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "admin": "cd ./public/admin && npm run dev"
   },
   "dependencies": {
     "debug": "^4.1.1",
@@ -20,6 +21,7 @@
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
     "koa-views": "^6.2.0",
+    "mysql2": "^3.15.3",
     "tencentcloud-sdk-nodejs": "^4.1.148",
     "util": "latest"
   },

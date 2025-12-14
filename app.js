@@ -9,6 +9,8 @@ const logger = require('koa-logger')
 const index = require('./routes/index')
 const users = require('./routes/users')
 const txcdn = require('./routes/txcdn')
+
+const  pooldb = require('./config/db');
 // error handler
 onerror(app)
 
@@ -32,6 +34,7 @@ app.use(views(__dirname + '/views', {
 
 // logger
 app.use(async (ctx, next) => {
+  ctx.db = pooldb;  // 所有路由可通过 ctx.db 访问数据库
   const start = new Date()
   await next()
   const ms = new Date() - start

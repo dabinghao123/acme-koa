@@ -60,6 +60,9 @@
               <button id="forceRenewCert" class="normalBtn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); display: none;">
                 🔄 强制重新生成
               </button>
+              <button id="getRenewCert" class="normalBtn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); display: none;">
+                🔄 获取证书
+              </button>
             </div>
           </div>
         </div>
@@ -242,6 +245,7 @@
               </div>
             `;
             $("#forceRenewCert").show();
+            $("#getRenewCert").show();
             break;
           case 'expiring':
             statusClass = 'cert-status-expiring';
@@ -567,6 +571,73 @@
           window.forceRenew = true;
           $("#getTxtRecordID").click();
         }
+      });
+
+      $("#getRenewCert").click(function() { 
+
+         // var email = $('input[name="email"]').val();
+        var domain = $('input[name="domain"]').val();
+        // if (email === "") {
+        //   alert("请输入邮箱地址");
+        //   return;
+        // }
+        
+        if (domain === "") {
+          showToast("请输入域名");
+          return;
+        }
+        $("#hostName").html(domain);
+        
+        // 加载动画
+        $(".loadingDiv").show();
+
+        $.ajax({
+          url: "/getTxtRecord",
+          type: "GET",
+          data: {
+            // email: email,
+            domain: domain,
+            forceRenew: window.forceRenew || false,
+          },
+          success: function (data) {
+            updateStep(2); // 进入第二步
+            $(".inputEmailDiv").hide(); // Hide the input field
+            // Handle the response from the server
+            console.log(data);
+            // 加载动画
+            $(".loadingDiv").hide();
+            $(".showInfo").show(); // Show the CNAME info div
+
+            // 正则匹配 Domain 和 TXT value
+            const match = data.data.stdout.match(/Domain: '(.*?)'/);
+            const hostRecodeText = match ? match[1] : null;
+
+            const match2 = data.data.stdout.match(/TXT value: '(.*?)'/);
+            const recodeText = match2 ? match2[1] : null;
+
+            console.log("Domain:", hostRecodeText);
+            console.log("TXT Value:", recodeText);
+            if (hostRecodeText && recodeText) {
+              $("#hostRcode").html(
+                hostRecodeText.replace(
+                  `.${domain.split(".")[1]}.${domain.split(".")[2]}`,
+                  ""
+                )
+              );
+              $("#TxtRcodeVlaue").html(recodeText);
+              $(".buttonsDiv").show();
+            } else {
+              $(".serveBackInfo").html(
+                data.data.stdout + "\n" + data.data.stderr
+              ); // Update the CNAME info div with the response
+            }
+          },
+          error: function (xhr, status, error) {
+            // Handle any errors
+            console.error("Error:", error);
+          },
+        });
+          
       });
       
       // 域名输入框变化时自动检查证书状态

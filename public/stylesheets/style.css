@@ -709,3 +709,9 @@ a:hover {
     max-width: 250px;
   }
 }
+
+
+
+#getRenewCert{
+  display: none;
+}
